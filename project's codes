@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_EVENTS 100
+#define MAX_EVENT_NAME 50
+#define MAX_DATE_TIME 30
+
+struct event {
+    char name[MAX_EVENT_NAME];
+    char datetime[MAX_DATE_TIME];
+};
+
+void add_event(struct event *events, int *num_events) {
+    if (*num_events >= MAX_EVENTS) {
+        printf("Maximum events reached.\n");
+        return;
+    }
+
+    struct event new_event;
+
+    printf("Enter event name: ");
+    fgets(new_event.name, MAX_EVENT_NAME, stdin);
+
+    printf("Enter event date and time (YYYY-MM-DD HH:MM): ");
+    fgets(new_event.datetime, MAX_DATE_TIME, stdin);
+
+    events[*num_events] = new_event;
+    *num_events += 1;
+
+    printf("Event added successfully.\n");
+}
+
+void display_events(struct event *events, int num_events) {
+    if (num_events == 0) {
+        printf("No events found.\n");
+        return;
+    }
+
+    printf("Events:\n");
+
+    for (int i = 0; i < num_events; i++) {
+        printf("%s at %s\n", events[i].name, events[i].datetime);
+    }
+}
+
+void save_events(struct event *events, int num_events) {
+    FILE *fp = fopen("schedule.txt", "w");
+    if (fp == NULL) {
+        printf("Error: unable to open file.\n");
+        return;
+    }
+
+    for (int i = 0; i < num_events; i++) {
+        fprintf(fp, "%s|%s\n", events[i].name, events[i].datetime);
+    }
+
+    fclose(fp);
+
+    printf("Events saved to file.\n");
+}
+
+void load_events(struct event *events, int *num_events) {
+    FILE *fp = fopen("schedule.txt", "r");
+    if (fp == NULL) {
+        printf("Schedule file not found.\n");
+        return;
+    }
+
+    char line[MAX_EVENT_NAME + MAX_DATE_TIME + 2];
+    while (fgets(line, MAX_EVENT_NAME + MAX_DATE_TIME + 2, fp) != NULL) {
+        char *name = strtok(line, "|");
+        char *datetime = strtok(NULL, "\n");
+        struct event e;
+        strcpy(e.name, name);
+        strcpy(e.datetime, datetime);
+        events[*num_events] = e;
+        *num_events += 1;
+    }
+
+    fclose(fp);
+
+    printf("Events loaded from file.\n");
+}
+
+int main() {
+    struct event events[MAX_EVENTS];
+    int num_events = 0;
+
+    load_events(events, &num_events);
+
+    int choice;
+
+    do {
+        printf("1. Add event\n");
+        printf("2. Display events\n");
+        printf("3. Save events\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        getchar();
+
+        switch (choice) {
+            case 1:
+                add_event(events, &num_events);
+                break;
+            case 2:
+                display_events(events, num_events);
+                break;
+            case 3:
+                save_events(events, num_events);
+                break;
+            case 4:
+                break;
+            default:
+                printf("Invalid choice.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
